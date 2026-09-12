@@ -1,7 +1,7 @@
 import unittest,sys
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"scripts"))
-from common import repair_semicolon_row,repair_text_date_autoconversion,repair_numeric_excel_serial
+from common import repair_semicolon_row,repair_text_date_autoconversion,repair_numeric_excel_serial,normalize_control_date
 
 class TestParser(unittest.TestCase):
     def test_station_name_semicolon(self):
@@ -19,6 +19,17 @@ class TestParser(unittest.TestCase):
     def test_text_date_month_yy(self):
         self.assertEqual(repair_text_date_autoconversion("Лис.52")[0],"11.52")
         self.assertEqual(repair_text_date_autoconversion("Січ.99")[0],"1.99")
+
+
+    def test_control_date_iso(self):
+        self.assertEqual(normalize_control_date("2020-04-14"),"2020-04-14")
+
+    def test_control_date_dmy_dot(self):
+        self.assertEqual(normalize_control_date("14.04.2020"),"2020-04-14")
+
+    def test_control_date_unsupported_fails_closed(self):
+        with self.assertRaises(ValueError):
+            normalize_control_date("04/14/2020")
 
     def test_numeric_serial_ddmm(self):
         self.assertEqual(repair_numeric_excel_serial("45505","Nitrat","2024-08-13")[0],"1.08")
