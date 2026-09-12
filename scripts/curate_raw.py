@@ -82,7 +82,7 @@ def main():
     if len(ids)!=len(set(ids)): raise RuntimeError("Duplicate Record_ID")
     if len(keys)!=len(set(keys)): raise RuntimeError("Duplicate Post_ID + Controle_Date")
 
-    record_fields=fields+["Source_ID","Source_Sheet","Record_ID"]
+    record_fields=fields+["Source_Sheet","Source_ID","Record_ID"]
     write(out/"curated_from_raw.csv",all_records,record_fields)
     corr_fields=["Record_ID","Post_ID","Controle_Date","Field","Correction_Code","Original_Value","Corrected_Value","Correction_Rule","Source_ID","Source_Sheet","Source_Line"]
     write(out/"technical_corrections_from_raw.csv",all_corr,corr_fields)

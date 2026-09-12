@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Recompute domain-level QC flags from curated-from-raw observations."""
+"""Recompute domain-level QC flags and zero-semantics review from curated-from-raw observations."""
 from __future__ import annotations
-import argparse,csv,math,statistics
+import argparse,csv,math
 from collections import defaultdict
 from datetime import datetime
-from pathlib import Path
 
 MEAS=["Azot","BSK5","Zavisli","Kisen","Sulfat","Hlorid","Amoniy","Nitrat","Nitrit","Fosfat","SPAR","Permanganat","HSK","Fitoplan","Atrazin","Simazin"]
 
@@ -19,11 +18,20 @@ def quantile(xs,q):
     p=(len(xs)-1)*q; lo=int(math.floor(p)); hi=int(math.ceil(p))
     return xs[lo] if lo==hi else xs[lo]+(xs[hi]-xs[lo])*(p-lo)
 
+def write_csv(path, rows):
+    if not rows:
+        raise RuntimeError(f"No rows generated for {path}")
+    with open(path,"w",encoding="utf-8-sig",newline="") as f:
+        w=csv.DictWriter(f,fieldnames=list(rows[0].keys()))
+        w.writeheader(); w.writerows(rows)
+
 def main():
     ap=argparse.ArgumentParser()
     ap.add_argument("--input",default="work/curated_from_raw.csv")
     ap.add_argument("--output",default="work/quality_flags_from_raw.csv")
+    ap.add_argument("--zero-output",default="work/zero_semantics_review_from_raw.csv")
     args=ap.parse_args()
+
     with open(args.input,encoding="utf-8-sig",newline="") as f:
         rows=list(csv.DictReader(f))
     for r in rows:
@@ -39,7 +47,8 @@ def main():
     def add(r,p,code,severity,reason,prev="",nxt="",aux=""):
         k=(r["Record_ID"],p,code)
         if k in seen:return
-        seen.add(k); flags.append({
+        seen.add(k)
+        flags.append({
             "Record_ID":r["Record_ID"],"Post_ID":r["Post_ID"],"Controle_Date":r["Controle_Date"],
             "Parameter":p,"Value":r["_"+p],"Flag_Code":code,"Severity":severity,
             "Reason":reason,"Previous_Value":prev,"Next_Value":nxt,
@@ -56,15 +65,33 @@ def main():
     series=defaultdict(list)
     for r in rows:
         for p in MEAS:
-            if r["_"+p] is not None:series[(r["Post_ID"],p)].append((r["_date"],r["_"+p],r))
-    for k in series:series[k].sort(key=lambda x:x[0])
+            if r["_"+p] is not None:
+                series[(r["Post_ID"],p)].append((r["_date"],r["_"+p],r))
+    for k in series:
+        series[k].sort(key=lambda x:x[0])
+
+    zero_review=[]
     for (pid,p),arr in series.items():
-        if len(arr)<3:continue
+        if len(arr)<3: continue
         for i in range(1,len(arr)-1):
-            d0,v0,_=arr[i-1]; d,v,r=arr[i]; d1,v1,_=arr[i+1]
-            if (d-d0).days>180 or (d1-d).days>180 or min(v,v0,v1)<=0:continue
+            d0,v0,r0=arr[i-1]; d,v,r=arr[i]; d1,v1,r1=arr[i+1]
+
+            # zero-semantics review: exactly the rule used for the publication candidate
+            if v==0 and v0>0 and v1>0:
+                if (d-d0).days<=180 and (d1-d).days<=180 and max(v0,v1)/min(v0,v1)<=5:
+                    zero_review.append({
+                        "Record_ID":r["Record_ID"],"Post_ID":pid,"Controle_Date":r["Controle_Date"],
+                        "Parameter":p,"Zero_Value":0,"Previous_Value":v0,"Next_Value":v1,
+                        "Previous_Date":d0.isoformat(),"Next_Date":d1.isoformat(),
+                        "Post_Name":r["Post_Name"],"Source_Sheet":r["Source_Sheet"],
+                        "Interpretation":"Zero occurs between two positive, mutually consistent observations; may be true zero, below-detection coding, or source convention. Retained unchanged."
+                    })
+                continue
+
+            if min(v,v0,v1)<=0: continue
+            if (d-d0).days>180 or (d1-d).days>180: continue
             nr=max(v0,v1)/min(v0,v1)
-            if nr>5:continue
+            if nr>5: continue
             center=math.sqrt(v0*v1); ratio=v/center
             ar=ratio if ratio>=1 else 1/ratio
             if ar>=20:
@@ -86,10 +113,9 @@ def main():
         if bod is not None and cod is not None and bod>0 and cod<.5*bod:
             add(r,"HSK","DQ006_COD_BOD5_CONSISTENCY","review","HSK < 0.5 * BSK5.",aux=f"BSK5={bod}")
 
-    fields=list(flags[0].keys())
-    with open(args.output,"w",encoding="utf-8-sig",newline="") as f:
-        w=csv.DictWriter(f,fieldnames=fields);w.writeheader();w.writerows(flags)
-    print(f"QC flags={len(flags)}; high={sum(x['Severity']=='high' for x in flags)}")
+    write_csv(args.output,flags)
+    write_csv(args.zero_output,zero_review)
+    print(f"QC flags={len(flags)}; high={sum(x['Severity']=='high' for x in flags)}; zero-review={len(zero_review)}")
 
 if __name__=="__main__":
     main()
