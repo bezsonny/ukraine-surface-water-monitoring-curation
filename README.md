@@ -66,3 +66,20 @@ The official portal exposes two candidate revisions for the May 2024 source grou
 ## Requirements
 
 Python 3.10+; standard library only.
+
+
+## Rate-limit handling
+
+Version 1.2.2 adds conservative HTTP retry and throttling for data.gov.ua. The fetcher honors `Retry-After`, retries HTTP 429 and transient 5xx responses with exponential backoff, and waits 1.5 seconds after successful requests by default.
+
+
+## Publication-level validation
+
+Before the first public software release, the pipeline was extended to regenerate the zero-semantics review table and to validate the complete publication observation content, not only the 24-field curated core. The final validation therefore checks:
+
+- 77 source-group curated fingerprints;
+- 59,670 publication records;
+- 1,585 domain-QC flags;
+- 1,608 deterministic technical corrections;
+- 1,974 zero-semantics review rows;
+- the complete publication-record content fingerprint after deterministic sorting by `Record_ID`.
