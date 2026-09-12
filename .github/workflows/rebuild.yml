@@ -1,0 +1,33 @@
+name: Rebuild dataset from raw data.gov.ua sources
+
+on:
+  workflow_dispatch:
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Unit tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Acquire, rebuild and validate
+        run: python run_pipeline.py
+
+      - name: Upload raw archive manifest and rebuilt outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: surface-water-rebuild
+          path: |
+            raw_archive_manifest.csv
+            raw/
+            raw_metadata/
+            work/
