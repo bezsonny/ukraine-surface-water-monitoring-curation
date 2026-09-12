@@ -1,0 +1,8 @@
+{
+  "registry_sources": 77,
+  "expected_records": 59670,
+  "known_independent_raw_sha256_count": 3,
+  "candidate_revision_source_groups": 1,
+  "unit_tests": "PASSED",
+  "expected_overall_24field_content_sha256": "0ea375ed0a223f60dfcf0dd5125a420c6ff85943654e9435eaafe1bf8933da74"
+}

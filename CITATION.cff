@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+message: "If you use this reproducibility pipeline, please cite the archived software release and associated dataset DOI 10.5281/zenodo.22722596."
+title: "Raw-to-publication pipeline for Ukrainian surface-water monitoring data"
+type: software
+version: "1.1.0"
+license: "MIT"
+authors:
+  - family-names: "Bezsonnyi"
+    given-names: "Vitalii"
+    orcid: "https://orcid.org/0000-0001-8089-7724"
+keywords:
+  - surface water
+  - environmental monitoring
+  - data curation
+  - reproducibility
+  - Ukraine
