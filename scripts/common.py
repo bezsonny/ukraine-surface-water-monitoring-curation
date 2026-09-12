@@ -116,6 +116,24 @@ def repair_numeric_excel_serial(value, field, observation_date):
         return f"{decoded.month}.{decoded.year%100:02d}",f"Excel serial {serial} -> {decoded.isoformat()} -> MM.YY"
     return None,None
 
+def normalize_control_date(value):
+    """Normalize supported source date formats to ISO 8601 YYYY-MM-DD.
+
+    The official source files are not fully uniform across years. Historical
+    CSV resources use DD.MM.YYYY (for example, 14.04.2020), while some later
+    curated/source tables use YYYY-MM-DD. Only these two explicit formats are
+    accepted; unexpected date formats fail closed.
+    """
+    s=(value or "").strip()
+    for fmt in ("%Y-%m-%d", "%d.%m.%Y"):
+        try:
+            return datetime.strptime(s,fmt).date().isoformat()
+        except ValueError:
+            pass
+    raise ValueError(
+        f"Unsupported Controle_Date format: {s!r}; expected YYYY-MM-DD or DD.MM.YYYY"
+    )
+
 def curate_record(raw, schema_fields):
     r={k:raw.get(k,"") for k in schema_fields}
     corrections=[]
@@ -124,9 +142,8 @@ def curate_record(raw, schema_fields):
     for field in TEXT_FIELDS:
         val=(r[field] or "").strip()
         r[field]="" if val.upper()=="NULL" else val
-    # ISO date source is already YYYY-MM-DD; validate.
-    dt=(r["Controle_Date"] or "").strip()
-    datetime.strptime(dt,"%Y-%m-%d")
+    # Normalize the official source date to ISO 8601.
+    dt=normalize_control_date(r["Controle_Date"])
     r["Controle_Date"]=dt
 
     for field in DECIMAL_FIELDS:
