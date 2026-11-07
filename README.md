@@ -83,3 +83,8 @@ Before the first public software release, the pipeline was extended to regenerat
 - 1,608 deterministic technical corrections;
 - 1,974 zero-semantics review rows;
 - the complete publication-record content fingerprint after deterministic sorting by `Record_ID`.
+
+
+## Revision v1.1.1
+
+This revision changes numeric Excel serial-date handling so that same-year serials decoding to the first day of a month are not automatically reconstructed when both DD.MM and MM.YY source interpretations remain plausible. Such cells are emitted as missing analytical values and recorded in `work/unresolved_source_artifacts_from_raw.csv`. The revised validation target is dataset v1.1.
