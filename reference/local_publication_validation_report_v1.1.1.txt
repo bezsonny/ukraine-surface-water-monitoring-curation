@@ -1,0 +1,4 @@
+VALIDATION PASSED
+sources=77 curated_records=59670 publication_records=59670
+quality_flags=1585 deterministic_technical_corrections=1586 unresolved_source_artifacts=22 zero_review=1973
+publication_sha256=0ffb752646b06801957ee2604c8d7f66173bbb1e4024eeca50b11ee9805787ed
