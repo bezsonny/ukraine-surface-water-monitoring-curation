@@ -1,0 +1,15 @@
+test_control_date_dmy_dot (test_parser.TestParser.test_control_date_dmy_dot) ... ok
+test_control_date_iso (test_parser.TestParser.test_control_date_iso) ... ok
+test_control_date_unsupported_fails_closed (test_parser.TestParser.test_control_date_unsupported_fails_closed) ... ok
+test_numeric_serial_ddmm_unique (test_parser.TestParser.test_numeric_serial_ddmm_unique) ... ok
+test_numeric_serial_mmyy (test_parser.TestParser.test_numeric_serial_mmyy) ... ok
+test_numeric_serial_same_year_day1_is_unresolved (test_parser.TestParser.test_numeric_serial_same_year_day1_is_unresolved) ... ok
+test_simazin_not_reinterpreted_as_date (test_parser.TestParser.test_simazin_not_reinterpreted_as_date) ... ok
+test_station_name_semicolon (test_parser.TestParser.test_station_name_semicolon) ... ok
+test_text_date_dd_month (test_parser.TestParser.test_text_date_dd_month) ... ok
+test_text_date_month_yy (test_parser.TestParser.test_text_date_month_yy) ... ok
+
+----------------------------------------------------------------------
+Ran 10 tests in 0.001s
+
+OK 
