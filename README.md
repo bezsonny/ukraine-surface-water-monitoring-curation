@@ -1,4 +1,4 @@
-# Raw-to-publication reproducibility pipeline v1.1.1
+# Raw-to-publication reproducibility pipeline v1.1.2
 
 This package is the next reproducibility layer for the dataset
 **“Harmonized surface-water monitoring data for Ukraine, 2003–July 2026.”**
@@ -91,3 +91,8 @@ Before the first public software release, the pipeline was extended to regenerat
 ## Revision v1.1.1
 
 This revision changes numeric Excel serial-date handling so that same-year serials decoding to the first day of a month are not automatically reconstructed when both DD.MM and MM.YY source interpretations remain plausible. Such cells are emitted as missing analytical values and recorded in `work/unresolved_source_artifacts_from_raw.csv`. The revised validation target is dataset v1.1.
+
+
+## Revision v1.1.2
+
+This release synchronizes peer-review metadata and documentation with Dataset v1.1. The data-processing logic and validated numerical outputs are unchanged from v1.1.1. The archived software release DOI for v1.1.2 is **10.5281/zenodo.24040748**.
