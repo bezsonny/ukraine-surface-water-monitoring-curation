@@ -31,14 +31,22 @@ class TestParser(unittest.TestCase):
         with self.assertRaises(ValueError):
             normalize_control_date("04/14/2020")
 
-    def test_numeric_serial_ddmm(self):
-        self.assertEqual(repair_numeric_excel_serial("45505","Nitrat","2024-08-13")[0],"1.08")
+    def test_numeric_serial_ddmm_unique(self):
+        self.assertEqual(repair_numeric_excel_serial("45426","Zavisli","2024-08-29")[0],"14.05")
+
+    def test_numeric_serial_same_year_day1_is_unresolved(self):
+        corrected,rule,meta=repair_numeric_excel_serial("45505","Nitrat","2024-08-13")
+        self.assertIsNone(corrected)
+        self.assertIsNone(rule)
+        self.assertEqual(meta["Artifact_Code"],"UA001_UNRESOLVED_EXCEL_SERIAL")
+        self.assertEqual(meta["Candidate_DD_MM"],"1.08")
+        self.assertEqual(meta["Candidate_MM_YY"],"8.24")
 
     def test_numeric_serial_mmyy(self):
         self.assertEqual(repair_numeric_excel_serial("20729","Nitrat","2024-08-13")[0],"10.56")
 
     def test_simazin_not_reinterpreted_as_date(self):
-        self.assertEqual(repair_numeric_excel_serial("24000","Simazin","2005-01-17"),(None,None))
+        self.assertEqual(repair_numeric_excel_serial("24000","Simazin","2005-01-17"),(None,None,None))
 
 if __name__=="__main__":
     unittest.main()
