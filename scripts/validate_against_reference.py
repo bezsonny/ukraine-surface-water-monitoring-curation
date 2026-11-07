@@ -25,6 +25,7 @@ def main():
     ap.add_argument("--flags",default="work/quality_flags_from_raw.csv")
     ap.add_argument("--corrections",default="work/technical_corrections_from_raw.csv")
     ap.add_argument("--zero-review",default="work/zero_semantics_review_from_raw.csv")
+    ap.add_argument("--unresolved",default="work/unresolved_source_artifacts_from_raw.csv")
     ap.add_argument("--publication-fields",default="reference/publication_observation_fields.txt")
     ap.add_argument("--publication-hash",default="reference/expected_publication_observations_sha256.txt")
     args=ap.parse_args()
@@ -61,9 +62,11 @@ def main():
     _,flags=read(args.flags)
     _,corr=read(args.corrections)
     _,zero=read(args.zero_review)
+    _,unresolved=read(args.unresolved)
     if len(flags)!=1585: errors.append(f"quality flag count {len(flags)} != 1585")
-    if len(corr)!=1608: errors.append(f"technical correction count {len(corr)} != 1608")
-    if len(zero)!=1974: errors.append(f"zero-review count {len(zero)} != 1974")
+    if len(corr)!=1586: errors.append(f"deterministic technical correction count {len(corr)} != 1586")
+    if len(unresolved)!=22: errors.append(f"unresolved source artifact count {len(unresolved)} != 22")
+    if len(zero)!=1973: errors.append(f"zero-review count {len(zero)} != 1973")
 
     if errors:
         print("VALIDATION FAILED")
@@ -72,7 +75,7 @@ def main():
 
     print("VALIDATION PASSED")
     print(f"sources={len(reg)} curated_records={len(rows)} publication_records={len(pub)}")
-    print(f"quality_flags={len(flags)} technical_corrections={len(corr)} zero_review={len(zero)}")
+    print(f"quality_flags={len(flags)} deterministic_technical_corrections={len(corr)} unresolved_source_artifacts={len(unresolved)} zero_review={len(zero)}")
     print(f"publication_sha256={got_hash}")
 
 if __name__=="__main__":

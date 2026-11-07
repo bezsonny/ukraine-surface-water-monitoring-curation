@@ -93,28 +93,43 @@ def repair_text_date_autoconversion(value):
     return None,None
 
 def repair_numeric_excel_serial(value, field, observation_date):
-    """Return corrected string only when the serial-date interpretation is structurally supported."""
+    """Classify numeric Excel serial-date artefacts in hydrochemical fields.
+
+    Returns (corrected_value, rule, unresolved_metadata). A decoded date is
+    reconstructed only when the inverse mapping is structurally unique under
+    the documented rules. If the decoded date is day 1 in the same year as
+    the observation, both DD.MM and MM.YY interpretations remain plausible;
+    the analytical value is therefore left missing and the source serial is
+    recorded as an unresolved source artefact.
+    """
     if field not in CHEM_FIELDS:
-        return None,None
+        return None,None,None
     s=value.strip()
     try:
         d=Decimal(s)
     except InvalidOperation:
-        return None,None
+        return None,None,None
     if d != d.to_integral_value():
-        return None,None
+        return None,None,None
     serial=int(d)
     if not (10959 <= serial <= 60000):
-        return None,None
+        return None,None,None
     decoded=(EXCEL_EPOCH+timedelta(days=serial)).date()
     obs=datetime.strptime(observation_date,"%Y-%m-%d").date()
-    # Same observation year -> DD.MM, including first day of month.
     if decoded.year==obs.year:
-        return f"{decoded.day}.{decoded.month:02d}",f"Excel serial {serial} -> {decoded.isoformat()} -> DD.MM"
-    # A date on day 1 in another year can arise from MM.YY input, e.g. 10.56.
+        if decoded.day==1:
+            return None,None,{
+                "Artifact_Code":"UA001_UNRESOLVED_EXCEL_SERIAL",
+                "Original_Serial_Value":s,
+                "Excel_Decoded_Date":decoded.isoformat(),
+                "Candidate_DD_MM":f"1.{decoded.month:02d}",
+                "Candidate_MM_YY":f"{decoded.month}.{decoded.year%100:02d}",
+                "Reason":"Same-year day-1 Excel serial has non-unique inverse mapping (DD.MM versus MM.YY).",
+            }
+        return f"{decoded.day}.{decoded.month:02d}",f"Excel serial {serial} -> {decoded.isoformat()} -> DD.MM",None
     if decoded.day==1:
-        return f"{decoded.month}.{decoded.year%100:02d}",f"Excel serial {serial} -> {decoded.isoformat()} -> MM.YY"
-    return None,None
+        return f"{decoded.month}.{decoded.year%100:02d}",f"Excel serial {serial} -> {decoded.isoformat()} -> MM.YY",None
+    return None,None,None
 
 def normalize_control_date(value):
     """Normalize supported source date formats to ISO 8601 YYYY-MM-DD.
@@ -137,6 +152,7 @@ def normalize_control_date(value):
 def curate_record(raw, schema_fields):
     r={k:raw.get(k,"") for k in schema_fields}
     corrections=[]
+    unresolved=[]
     # identifiers / text
     r["Post_ID"]=str(r["Post_ID"]).strip()
     for field in TEXT_FIELDS:
@@ -156,9 +172,14 @@ def curate_record(raw, schema_fields):
         if corrected is not None:
             code="TC001_TEXT_DATE_AUTOCONVERSION"
         else:
-            corrected,rule=repair_numeric_excel_serial(rawv,field,dt)
+            corrected,rule,unresolved_meta=repair_numeric_excel_serial(rawv,field,dt)
             if corrected is not None:
                 code="TC002_NUMERIC_EXCEL_SERIAL_AUTOCONVERSION"
+            elif unresolved_meta is not None:
+                r[field]=""
+                item={"Field":field,**unresolved_meta}
+                unresolved.append(item)
+                continue
         if corrected is not None:
             r[field]=corrected
             corrections.append({
@@ -172,7 +193,7 @@ def curate_record(raw, schema_fields):
     r["Source_ID"]=raw["Source_ID"]
     r["Source_Sheet"]=raw["Source_Sheet"]
     r["Record_ID"]=f"SWM_{r['Post_ID']}_{r['Controle_Date'].replace('-','')}"
-    return r,corrections
+    return r,corrections,unresolved
 
 def canonical_content_hash(records, schema_fields):
     lines=[]
