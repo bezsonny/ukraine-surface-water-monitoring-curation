@@ -1,4 +1,4 @@
-# Raw-to-publication reproducibility pipeline v1.1
+# Raw-to-publication reproducibility pipeline v1.1.1
 
 This package is the next reproducibility layer for the dataset
 **“Harmonized surface-water monitoring data for Ukraine, 2003–July 2026.”**
@@ -8,7 +8,7 @@ It is designed to rebuild the curated dataset from the **original State Agency o
 
 ## Associated dataset
 
-Reserved Zenodo dataset DOI: **10.5281/zenodo.22722596** (https://doi.org/10.5281/zenodo.22722596). The dataset record should be made public before the manuscript is submitted.
+Dataset v1.1 Zenodo version DOI: **10.5281/zenodo.24035725** (https://doi.org/10.5281/zenodo.24035725); concept DOI: **10.5281/zenodo.22722595**.
 
 ## What is included
 
@@ -17,7 +17,7 @@ Reserved Zenodo dataset DOI: **10.5281/zenodo.22722596** (https://doi.org/10.528
 - `scripts/curate_raw.py` — parses semicolon-delimited UTF-8 CSV, repairs structural semicolons inside `Post_Name`, converts `NULL` to machine-readable missing values, trims outer whitespace, and deterministically repairs spreadsheet date auto-conversion artefacts.
 - `scripts/domain_qc.py` — regenerates domain QC flags.
 - `scripts/assemble_publication.py` — attaches row-level QC/correction indicators.
-- `scripts/validate_against_reference.py` — checks every source group against the frozen v1.0 expected content fingerprint.
+- `scripts/validate_against_reference.py` — checks every source group against the frozen Dataset v1.1 expected content fingerprints and validates the publication-level reference hash.
 - `run_pipeline.py` — orchestrates the complete workflow.
 - `tests/` — unit tests for known structural and date-conversion failure modes.
 - `.github/workflows/rebuild.yml` — manual GitHub Actions workflow for a cloud rebuild.
@@ -53,7 +53,9 @@ python run_pipeline.py --skip-fetch
 - source groups: **77**
 - curated records: **59,670**
 - unique `Record_ID`: **59,670**
-- deterministic technical corrections: **1,608**
+- deterministic technical corrections: **1,586**
+- unresolved source artefacts: **22**
+- zero-semantics review rows: **1,973**
 - source content is checked per source group against `Expected_Curated_Content_SHA256`.
 
 ## May 2024
@@ -70,7 +72,7 @@ Python 3.10+; standard library only.
 
 ## Rate-limit handling
 
-Version 1.2.2 adds conservative HTTP retry and throttling for data.gov.ua. The fetcher honors `Retry-After`, retries HTTP 429 and transient 5xx responses with exponential backoff, and waits 1.5 seconds after successful requests by default.
+The fetcher uses conservative HTTP retry and throttling for data.gov.ua. It honors `Retry-After`, retries HTTP 429 and transient 5xx responses with exponential backoff, and waits 1.5 seconds after successful requests by default.
 
 
 ## Publication-level validation
@@ -80,8 +82,9 @@ Before the first public software release, the pipeline was extended to regenerat
 - 77 source-group curated fingerprints;
 - 59,670 publication records;
 - 1,585 domain-QC flags;
-- 1,608 deterministic technical corrections;
-- 1,974 zero-semantics review rows;
+- 1,586 deterministic technical corrections;
+- 22 unresolved source artefacts;
+- 1,973 zero-semantics review rows;
 - the complete publication-record content fingerprint after deterministic sorting by `Record_ID`.
 
 
